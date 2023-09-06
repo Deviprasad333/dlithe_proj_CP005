@@ -1,0 +1,326 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_NAME_LENGTH 50
+#define MAX_ORDERS 100
+
+typedef struct Employee {
+    int id;
+    char name[MAX_NAME_LENGTH];
+    float salary;
+    struct Employee* next;
+} Employee;
+
+typedef struct FoodItem {
+    int code;
+    char name[MAX_NAME_LENGTH];
+    float price;
+    struct FoodItem* next;
+} FoodItem;
+
+typedef struct Order {
+    int foodCode;
+    int quantity;
+    char customerName[MAX_NAME_LENGTH];
+    char address[MAX_NAME_LENGTH];
+    char phoneNumber[MAX_NAME_LENGTH];
+} Order;
+
+Employee* employeeList = NULL;
+FoodItem* foodItemList = NULL;
+Order orders[MAX_ORDERS];
+int orderCount = 0;
+
+void printMenu() {
+    printf("\n======= Food and Employee Management System =======\n");
+    printf("1. Food Ordering System\n");
+    printf("2. Employee Management\n");
+    printf("3. View last orders\n");
+    printf("4. Exit\n");
+    printf("Please enter your choice: ");
+}
+
+void printFoodMenu() {
+    printf("\n======= Food Menu =======\n");
+    FoodItem* current = foodItemList;
+    while (current != NULL) {
+        printf("%d. %s \t $%.2f\n", current->code, current->name, current->price);
+        current = current->next;
+    }
+}
+
+void addFoodItem(int code, char* name, float price) {
+    FoodItem* newFoodItem = (FoodItem*)malloc(sizeof(FoodItem));
+    newFoodItem->code = code;
+    strcpy(newFoodItem->name, name);
+    newFoodItem->price = price;
+    newFoodItem->next = NULL;
+
+    if (foodItemList == NULL) {
+        foodItemList = newFoodItem;
+    } else {
+        FoodItem* current = foodItemList;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = newFoodItem;
+    }
+}
+
+void printEmployeeList() {
+    printf("\n======= Employee List =======\n");
+    Employee* current = employeeList;
+    while (current != NULL) {
+        printf("ID: %d \t Name: %s \t Salary: %.2f\n", current->id, current->name, current->salary);
+        current = current->next;
+    }
+}
+
+void addEmployee(int id, char* name, float salary) {
+    Employee* newEmployee = (Employee*)malloc(sizeof(Employee));
+    newEmployee->id = id;
+    strcpy(newEmployee->name, name);
+    newEmployee->salary = salary;
+    newEmployee->next = NULL;
+
+    if (employeeList == NULL) {
+        employeeList = newEmployee;
+    } else {
+        Employee* current = employeeList;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = newEmployee;
+    }
+}
+
+Employee* searchEmployee(int id) {
+    Employee* current = employeeList;
+    while (current != NULL) {
+        if (current->id == id) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+Employee* searchEmployeeByName(char* name) {
+    Employee* current = employeeList;
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+void removeEmployee(int id) {
+    if (employeeList == NULL) {
+        return;
+    }
+
+    Employee* current = employeeList;
+    Employee* prev = NULL;
+
+    if (current->id == id) {
+        employeeList = current->next;
+        free(current);
+        printf("Employee removed successfully!\n");
+        return;
+    }
+
+    while (current != NULL && current->id != id) {
+        prev = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        printf("Employee not found!\n");
+        return;
+    }
+
+    prev->next = current->next;
+    free(current);
+    printf("Employee removed successfully!\n");
+}
+
+void placeOrder() {
+    int foodCode, quantity;
+    char customerName[MAX_NAME_LENGTH];
+    char address[MAX_NAME_LENGTH];
+    char phoneNumber[MAX_NAME_LENGTH];
+
+    printf("\n======= Place an Order =======\n");
+
+    printFoodMenu();
+
+    printf("Enter the food code: ");
+    scanf("%d", &foodCode);
+
+    printf("Enter the quantity: ");
+    scanf("%d", &quantity);
+
+    printf("Enter customer name: ");
+    getchar(); // Consume the newline character
+    fgets(customerName, MAX_NAME_LENGTH, stdin);
+    customerName[strcspn(customerName, "\n")] = '\0';
+
+    printf("Enter address: ");
+    fgets(address, MAX_NAME_LENGTH, stdin);
+    address[strcspn(address, "\n")] = '\0';
+
+    printf("Enter phone number: ");
+    fgets(phoneNumber, MAX_NAME_LENGTH, stdin);
+    phoneNumber[strcspn(phoneNumber, "\n")] = '\0';
+
+    // Save the order
+    orders[orderCount].foodCode = foodCode;
+    orders[orderCount].quantity = quantity;
+    strcpy(orders[orderCount].customerName, customerName);
+    strcpy(orders[orderCount].address, address);
+    strcpy(orders[orderCount].phoneNumber, phoneNumber);
+
+    orderCount++;
+
+    printf("\nOrder placed successfully!\n");
+}
+
+void viewLastOrders() {
+    printf("\n======= Last Orders =======\n");
+    for (int i = orderCount - 1; i >= 0; i--) {
+        printf("Customer: %s\n", orders[i].customerName);
+        printf("Food Code: %d\n", orders[i].foodCode);
+        printf("Quantity: %d\n", orders[i].quantity);
+        printf("Address: %s\n", orders[i].address);
+        printf("Phone Number: %s\n\n", orders[i].phoneNumber);
+    }
+}
+
+int main() {
+    int choice;
+
+    // Adding some sample food items
+    addFoodItem(1, "Pizza", 10.99);
+    addFoodItem(2, "Burger", 5.99);
+    addFoodItem(3, "Pasta", 8.99);
+
+    // Adding some sample employees
+    addEmployee(1, "John Doe", 2000);
+    addEmployee(2, "Jane Smith", 2500);
+    addEmployee(3, "David Brown", 3000);
+
+    do {
+        printMenu();
+        scanf("%d", &choice);
+        getchar(); // Consume the newline character
+
+        switch (choice) {
+            case 1:
+                placeOrder();
+                break;
+            case 2: {
+                int adminChoice;
+                printf("\n======= Employee Management =======\n");
+                printf("1. Add Employee Records\n");
+                printf("2. View all employee records\n");
+                printf("3. Search employee by ID or Name\n");
+                printf("4. Remove Employee records\n");
+                printf("Please enter your choice: ");
+                scanf("%d", &adminChoice);
+                getchar(); // Consume the newline character
+
+                switch (adminChoice) {
+                    case 1: {
+                        int id;
+                        char name[MAX_NAME_LENGTH];
+                        float salary;
+                        printf("Enter Employee ID: ");
+                        scanf("%d", &id);
+                        getchar(); // Consume the newline character
+                        printf("Enter Employee Name: ");
+                        fgets(name, MAX_NAME_LENGTH, stdin);
+                        name[strcspn(name, "\n")] = '\0'; // Remove trailing newline character
+                        printf("Enter Salary: ");
+                        scanf("%f", &salary);
+                        getchar(); // Consume the newline character
+
+                        addEmployee(id, name, salary);
+                        break;
+                    }
+                    case 2:
+                        printEmployeeList();
+                        break;
+                    case 3: {
+                        int searchChoice;
+                        printf("1. Search by Employee ID\n");
+                        printf("2. Search by Employee Name\n");
+                        printf("Please enter your choice: ");
+                        scanf("%d", &searchChoice);
+                        getchar(); // Consume the newline character
+
+                        switch (searchChoice) {
+                            case 1: {
+                                int id;
+                                printf("Enter Employee ID: ");
+                                scanf("%d", &id);
+                                getchar(); // Consume the newline character
+
+                                Employee* result = searchEmployee(id);
+                                if (result != NULL) {
+                                    printf("\nEmployee found!\n");
+                                    printf("ID: %d \t Name: %s \t Salary: %.2f\n", result->id, result->name, result->salary);
+                                } else {
+                                    printf("\nEmployee not found!\n");
+                                }
+                                break;
+                            }
+                            case 2: {
+                                char name[MAX_NAME_LENGTH];
+                                printf("Enter Employee Name: ");
+                                fgets(name, MAX_NAME_LENGTH, stdin);
+                                name[strcspn(name, "\n")] = '\0'; // Remove trailing newline character
+
+                                Employee* result = searchEmployeeByName(name);
+                                if (result != NULL) {
+                                    printf("\nEmployee found!\n");
+                                    printf("ID: %d \t Name: %s \t Salary: %.2f\n", result->id, result->name, result->salary);
+                                } else {
+                                    printf("\nEmployee not found!\n");
+                                }
+                                break;
+                            }
+                            default:
+                                printf("\nInvalid choice!\n");
+                        }
+                        break;
+                    }
+                    case 4: {
+                        int id;
+                        printf("Enter Employee ID to remove: ");
+                        scanf("%d", &id);
+                        getchar(); // Consume the newline character
+
+                        removeEmployee(id);
+                        break;
+                    }
+                    default:
+                        printf("\nInvalid choice!\n");
+                }
+                break;
+            }
+            case 3:
+                viewLastOrders();
+                break;
+            case 4:
+                printf("\nExiting...\n");
+                break;
+            default:
+                printf("\nInvalid choice!\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
